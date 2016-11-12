@@ -1012,7 +1012,10 @@ static int btusb_probe(struct usb_interface *intf,
 			return err;
 		}
 	}
-
+    
+    /*初始化设备的参数，
+     * 初始化三个工作队列，cmd_task,tx_task, rx_task
+     * */
 	err = hci_register_dev(hdev);
 	if (err < 0) {
 		hci_free_dev(hdev);

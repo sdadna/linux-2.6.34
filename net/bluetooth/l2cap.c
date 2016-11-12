@@ -839,7 +839,8 @@ static int l2cap_sock_create(struct net *net, struct socket *sock, int protocol,
 
 	if (sock->type == SOCK_RAW && !kern && !capable(CAP_NET_RAW))
 		return -EPERM;
-
+    
+    //将sock的操作指向l2cap 操作
 	sock->ops = &l2cap_sock_ops;
 
 	sk = l2cap_sock_alloc(net, sock, protocol, GFP_ATOMIC);
@@ -4026,16 +4027,19 @@ static int __init l2cap_init(void)
 {
 	int err;
 
+    //将L2CAP 协议注册到proto_list 列表上去
 	err = proto_register(&l2cap_proto, 0);
 	if (err < 0)
 		return err;
 
+    //将L2CAP 协议注册到bt_proto 数组中
 	err = bt_sock_register(BTPROTO_L2CAP, &l2cap_sock_family_ops);
 	if (err < 0) {
 		BT_ERR("L2CAP socket registration failed");
 		goto error;
 	}
 
+    //将L2CAP 添加到HCI_PROTO 数组中，容量为2 
 	err = hci_register_proto(&l2cap_hci_proto);
 	if (err < 0) {
 		BT_ERR("L2CAP protocol registration failed");
@@ -4043,6 +4047,7 @@ static int __init l2cap_init(void)
 		goto error;
 	}
 
+    //在/sys/kernel/debug/ 创建l2cap 文件
 	if (bt_debugfs) {
 		l2cap_debugfs = debugfs_create_file("l2cap", 0444,
 					bt_debugfs, NULL, &l2cap_debugfs_fops);

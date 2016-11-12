@@ -709,14 +709,17 @@ int __init hci_sock_init(void)
 {
 	int err;
 
+    //采用位图的方式，在proto_list中注册一个没有使用的协议号
+    //proto_list 全局的静态列表，供查询使用，cat /proc/net/protocols
 	err = proto_register(&hci_sk_proto, 0);
 	if (err < 0)
 		return err;
-
+    //初始化BTPROTO_HCI的ops
 	err = bt_sock_register(BTPROTO_HCI, &hci_sock_family_ops);
 	if (err < 0)
 		goto error;
 
+    //注册一个hci_notifier通知
 	hci_register_notifier(&hci_sock_nblock);
 
 	BT_INFO("HCI socket layer initialized");

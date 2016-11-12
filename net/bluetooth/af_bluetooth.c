@@ -137,7 +137,7 @@ static int bt_sock_create(struct net *net, struct socket *sock, int proto,
 		return -EINVAL;
 
 	if (!bt_proto[proto])
-		request_module("bt-proto-%d", proto);
+		request_module("bt-proto-%d", proto);//表示让linux 系统的用户空间调用/sbin/modprobe 加载名为bt-proto-*.ko 的模块
 
 	err = -EPROTONOSUPPORT;
 
@@ -418,10 +418,17 @@ static int __init bt_init(void)
 
 	BT_INFO("Core ver %s", VERSION);
 
+    /*
+     * 创建
+     * sys/kernel/debug/bluetooth
+     * sys/class/bluetooth
+     * 两个目录
+     * */
 	err = bt_sysfs_init();
 	if (err < 0)
 		return err;
-
+    
+    //向协议族注册蓝牙协议以及他的ops functions
 	err = sock_register(&bt_sock_family_ops);
 	if (err < 0) {
 		bt_sysfs_cleanup();

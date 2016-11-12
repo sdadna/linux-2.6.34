@@ -904,6 +904,12 @@ int hci_register_dev(struct hci_dev *hdev)
 	hdev->sniff_max_interval = 800;
 	hdev->sniff_min_interval = 80;
 
+    /*
+     *hci_cmd_task 从hdev->cmd_q队列中取CMD，调用hci_send_frame 发送出去。而hci_send_frame 会调用hdev->send 其实就是对应设备的驱动如usb就是btusb_send
+     *hci_tx_task 发送connection队列中的ACL和SCO数据，以及hdev->raw_中的数据
+     *hci_rx_task 从hdev->rx_q 队列中获取数据，根据数据类型调用对应的处理函数，HCI_EVENT_PKT, HCI_ACLDATA_PKT, HCI_SCODATA_PKT
+     */
+
 	tasklet_init(&hdev->cmd_task, hci_cmd_task,(unsigned long) hdev);
 	tasklet_init(&hdev->rx_task, hci_rx_task, (unsigned long) hdev);
 	tasklet_init(&hdev->tx_task, hci_tx_task, (unsigned long) hdev);
@@ -927,7 +933,8 @@ int hci_register_dev(struct hci_dev *hdev)
 	atomic_set(&hdev->promisc, 0);
 
 	write_unlock_bh(&hci_dev_list_lock);
-
+    
+    //在sys 文件系统下创建属性文件，inquiry_cache
 	hci_register_sysfs(hdev);
 
 	hdev->rfkill = rfkill_alloc(hdev->name, &hdev->dev,
@@ -939,6 +946,7 @@ int hci_register_dev(struct hci_dev *hdev)
 		}
 	}
 
+    //调用在通知链上的HCI_DEV_REG事件处理函数
 	hci_notify(hdev, HCI_DEV_REG);
 
 	return id;
