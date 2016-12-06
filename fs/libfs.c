@@ -424,13 +424,15 @@ int simple_fill_super(struct super_block *s, int magic, struct tree_descr *files
 	struct dentry *root;
 	struct dentry *dentry;
 	int i;
-
+    
+    //超级块对象的初始化
 	s->s_blocksize = PAGE_CACHE_SIZE;
 	s->s_blocksize_bits = PAGE_CACHE_SHIFT;
 	s->s_magic = magic;
 	s->s_op = &simple_super_operations;
 	s->s_time_gran = 1;
 
+    //创建root inode
 	inode = new_inode(s);
 	if (!inode)
 		return -ENOMEM;
@@ -444,7 +446,7 @@ int simple_fill_super(struct super_block *s, int magic, struct tree_descr *files
 	inode->i_op = &simple_dir_inode_operations;
 	inode->i_fop = &simple_dir_operations;
 	inode->i_nlink = 2;
-	root = d_alloc_root(inode);
+	root = d_alloc_root(inode);//创建一个dentry对象
 	if (!root) {
 		iput(inode);
 		return -ENOMEM;
@@ -471,6 +473,7 @@ int simple_fill_super(struct super_block *s, int magic, struct tree_descr *files
 		inode->i_ino = i;
 		d_add(dentry, inode);
 	}
+    //在超级块中保存root dentry的指针
 	s->s_root = root;
 	return 0;
 out:

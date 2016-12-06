@@ -623,12 +623,14 @@ static int __follow_mount(struct path *path)
 {
 	int res = 0;
 	while (d_mountpoint(path->dentry)) {
+        //查找挂载的对象
 		struct vfsmount *mounted = lookup_mnt(path);
 		if (!mounted)
 			break;
 		dput(path->dentry);
 		if (res)
 			mntput(path->mnt);
+        //找到挂载点，更换dentry
 		path->mnt = mounted;
 		path->dentry = dget(mounted->mnt_root);
 		res = 1;
@@ -719,6 +721,8 @@ static int do_lookup(struct nameidata *nd, struct qstr *name,
 done:
 	path->mnt = mnt;
 	path->dentry = dentry;
+    //对挂载点的处理
+    //用目标文件系统的root dentry替换当前目录的dentry
 	__follow_mount(path);
 	return 0;
 
@@ -818,6 +822,7 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 	int err;
 	unsigned int lookup_flags = nd->flags;
 	
+    //主要把最前面的‘/’去掉
 	while (*name=='/')
 		name++;
 	if (!*name)
@@ -828,6 +833,7 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 		lookup_flags = LOOKUP_FOLLOW | (nd->flags & LOOKUP_CONTINUE);
 
 	/* At this point we know we have a real path component. */
+    //文件名字符串逐层分离
 	for(;;) {
 		unsigned long hash;
 		struct qstr this;
@@ -851,6 +857,7 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 		this.hash = end_name_hash(hash);
 
 		/* remove trailing slashes? */
+        //最后一轮的名字字符
 		if (!c)
 			goto last_component;
 		while (*++name == '/');
@@ -868,6 +875,7 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 			case 2:	
 				if (this.name[1] != '.')
 					break;
+                //寻找当前文件的上一级目录
 				follow_dotdot(nd);
 				inode = nd->path.dentry->d_inode;
 				/* fallthrough */
@@ -875,6 +883,7 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 				continue;
 		}
 		/* This does the actual lookups.. */
+        //查找的是文件所在的目录
 		err = do_lookup(nd, &this, &next);
 		if (err)
 			break;
@@ -885,6 +894,7 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 			goto out_dput;
 
 		if (inode->i_op->follow_link) {
+            //文件昰符号链接，用下面的函数指向真正的文件
 			err = do_follow_link(&next, nd);
 			if (err)
 				goto return_err;
@@ -893,6 +903,7 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 			if (!inode)
 				break;
 		} else
+            //将path 转换为nameidata
 			path_to_nameidata(&next, nd);
 		err = -ENOTDIR; 
 		if (!inode->i_op->lookup)
@@ -919,6 +930,7 @@ last_component:
 			case 1:
 				goto return_reval;
 		}
+        //真正的查找文件
 		err = do_lookup(nd, &this, &next);
 		if (err)
 			break;
@@ -1009,20 +1021,20 @@ static int path_init(int dfd, const char *name, unsigned int flags, struct namei
 	nd->flags = flags;
 	nd->depth = 0;
 	nd->root.mnt = NULL;
-
+    //从根目录查找
 	if (*name=='/') {
 		set_root(nd);
 		nd->path = nd->root;
 		path_get(&nd->root);
-	} else if (dfd == AT_FDCWD) {
+	} else if (dfd == AT_FDCWD) {//从当前目录查找
 		struct fs_struct *fs = current->fs;
 		read_lock(&fs->lock);
 		nd->path = fs->pwd;
 		path_get(&fs->pwd);
 		read_unlock(&fs->lock);
-	} else {
+	} else {//文件已经打开过了
 		struct dentry *dentry;
-
+        //根据dfd指定的索引，从当前进程描述符中取出相应的file对象
 		file = fget_light(dfd, &fput_needed);
 		retval = -EBADF;
 		if (!file)
@@ -1040,7 +1052,7 @@ static int path_init(int dfd, const char *name, unsigned int flags, struct namei
 
 		nd->path = file->f_path;
 		path_get(&file->f_path);
-
+        //更新文件的引用计数
 		fput_light(file, fput_needed);
 	}
 	return 0;

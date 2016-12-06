@@ -710,7 +710,7 @@ int __init hci_sock_init(void)
 	int err;
 
     //采用位图的方式，在proto_list中注册一个没有使用的协议号
-    //proto_list 全局的静态列表，供查询使用，cat /proc/net/protocols
+    //proto_list 全局的静态链表，供查询使用，cat /proc/net/protocols
 	err = proto_register(&hci_sk_proto, 0);
 	if (err < 0)
 		return err;
@@ -719,7 +719,7 @@ int __init hci_sock_init(void)
 	if (err < 0)
 		goto error;
 
-    //注册一个hci_notifier通知
+    //注册一个hci_notifier通知，将hci_sock_nblock挂在通知链上，当发生HCI dev event 通知链会调用hci_sock_nblock
 	hci_register_notifier(&hci_sock_nblock);
 
 	BT_INFO("HCI socket layer initialized");

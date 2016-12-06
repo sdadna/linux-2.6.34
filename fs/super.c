@@ -972,6 +972,7 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
 	WARN((mnt->mnt_sb->s_maxbytes < 0), "%s set sb->s_maxbytes to "
 		"negative value (%lld)\n", type->name, mnt->mnt_sb->s_maxbytes);
 
+    /*mnt_mountpoint mnt_root 都为空*/
 	mnt->mnt_mountpoint = mnt->mnt_root;
 	mnt->mnt_parent = mnt;
 	up_write(&mnt->mnt_sb->s_umount);
