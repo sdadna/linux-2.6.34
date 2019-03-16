@@ -116,7 +116,7 @@ static void raw_rcv(struct sk_buff *skb, void *data)
 	 *  raw_recvmsg().  We pass a whole struct sockaddr_can in skb->cb
 	 *  containing the interface index.
 	 */
-
+	
 	BUILD_BUG_ON(sizeof(skb->cb) < sizeof(struct sockaddr_can));
 	addr = (struct sockaddr_can *)skb->cb;
 	memset(addr, 0, sizeof(*addr));

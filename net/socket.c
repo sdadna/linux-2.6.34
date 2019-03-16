@@ -2348,6 +2348,7 @@ int sock_register(const struct net_proto_family *ops)
 		return -ENOBUFS;
 	}
 
+	//add the protocol to the net_familes list,net_families list include all communication procotol in the linux
 	spin_lock(&net_family_lock);
 	if (net_families[ops->family])
 		err = -EEXIST;

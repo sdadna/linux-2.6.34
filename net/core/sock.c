@@ -309,10 +309,12 @@ int sock_queue_rcv_skb(struct sock *sk, struct sk_buff *skb)
 
 	spin_lock_irqsave(&list->lock, flags);
 	skb->dropcount = atomic_read(&sk->sk_drops);
+	//put the socket package to the queue tail
 	__skb_queue_tail(list, skb);
 	spin_unlock_irqrestore(&list->lock, flags);
 
 	if (!sock_flag(sk, SOCK_DEAD))
+		//notify socket data is ready
 		sk->sk_data_ready(sk, skb_len);
 	return 0;
 }

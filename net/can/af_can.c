@@ -545,6 +545,7 @@ EXPORT_SYMBOL(can_rx_unregister);
 
 static inline void deliver(struct sk_buff *skb, struct receiver *r)
 {
+	//func initialied in can_rx_register func, value is the raw_rcv function in raw.c.
 	r->func(skb, r->data);
 	r->matches++;
 }
